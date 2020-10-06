@@ -45,16 +45,23 @@ exports.trusteesetup = function(ctx, attributes, rng) {
     var G = generateG1Element(rng);
     setOpt(tpk, "g", G);
 
-    for (var i=0; i<tmax; i++) {
+    for (var i=0; i<tmax+1; i++) {
         var h = generateG2Element(rng);
         setOpt(tpk, "h"+String(i), h);
     }
 
+    var attriblist = {};
+    counter = 2;
+    for(var i=0; i<attributes.length; i++) {
+        attriblist[attributes[i]] = counter;
+        counter++;
+    }
+    setOpt(tpk, "atr", attriblist);
+
     return tpk;
 };
 
-exports.authoritysetup = function(ctx) {
-
+exports.authoritysetup = function(ctx, tpk) {
 };
 
 exports.generateattributes = function(ctx){

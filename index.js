@@ -3,6 +3,7 @@ const CTX = require("amcl-js").CTX;
 var ctx = new CTX("BN254");
 
 const abs = require("./abs");
+const cyrpto = require("crypto");
 
 var outputBytes = function(G) {
     var W = [];
@@ -15,7 +16,12 @@ var i;
 var RAW = [];
 var rng = new ctx.RAND();
 rng.clean();
-for (i=0;i<100;i++) RAW[i]=i;
+for (i=0;i<100;i++) {
+    var buff = cyrpto.randomBytes(8);
+    var hex = buff.toString("hex");
+    RAW[i]=parseInt(hex, 16);
+}
+console.log(RAW);
 rng.seed(100,RAW);
 
 var r = new ctx.BIG(0);
@@ -33,10 +39,10 @@ var s = ctx.BIG.randtrunc(r, 2 * ctx.CURVE_Order, rng);
 var sG = ctx.PAIR.G1mul(G, s);
 sGH = ctx.PAIR.ate(H, sG);
 var sgh = ctx.PAIR.fexp(sGH);
-outputBytes(sgh);
+// outputBytes(sgh);
 
 var powGH = ctx.PAIR.GTpow(v, s);
-outputBytes(powGH);
+// outputBytes(powGH);
 
-var tpk = abs.trusteesetup(ctx, ["Aqours", "Guilty Kiss", "AZALEA", "CYaRon"], rng);
-console.log(tpk);
+var tpk = abs.trusteesetup(ctx, ["Aqours", "GuiltyKiss", "AZALEA", "CYaRon"], rng);
+// console.log(tpk);
