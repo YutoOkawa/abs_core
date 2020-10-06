@@ -33,6 +33,25 @@ var GH = ctx.PAIR.initmp();
 GH = ctx.PAIR.ate(H, G);
 var v = ctx.PAIR.fexp(GH);
 
+var a = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+var divA = new ctx.BIG(0);
+divA.copy(a);
+// console.log(a);
+// console.log(divA);
+divA.invmodp(r);
+// console.log(divA);
+var aG = ctx.PAIR.G1mul(G, a);
+var aGH = ctx.PAIR.ate(H, aG);
+aGH = ctx.PAIR.fexp(aGH);
+// outputBytes(aGH);
+var divGH = ctx.PAIR.ate(H, aG);
+divGH = ctx.PAIR.fexp(divGH);
+divGH = ctx.PAIR.GTpow(divGH, divA)
+// outputBytes(divGH);
+// outputBytes(v);
+// outputBytes(ctx.PAIR.GTpow(aGH, divA));
+// outputBytes(v);
+
 var sGH = ctx.PAIR.initmp()
 var s = ctx.BIG.randtrunc(r, 2 * ctx.CURVE_Order, rng);
 var sG = ctx.PAIR.G1mul(G, s);
@@ -48,3 +67,6 @@ var tpk = abs.trusteesetup(ctx, ["Aqours", "GuiltyKiss", "AZALEA", "CYaRon"], rn
 var keypair = abs.authoritysetup(ctx, tpk, rng);
 // console.log(keypair.ask);
 // console.log(keypair.apk);
+
+var ska = abs.generateattributes(ctx, keypair["ask"],["Aqours"], rng);
+// console.log(ska);

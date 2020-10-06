@@ -77,6 +77,7 @@ exports.authoritysetup = function(ctx, tpk, rng) {
     setOpt(ask, "a0", a0);
     setOpt(ask, "a", a);
     setOpt(ask, "b", b);
+    setOpt(ask, "atr", tpk["atr"]);
 
     var A0 = ctx.PAIR.G2mul(tpk["h0"], a0);
     setOpt(apk, "A0", A0);
@@ -101,8 +102,35 @@ exports.authoritysetup = function(ctx, tpk, rng) {
     return keypair;
 };
 
-exports.generateattributes = function(ctx){
-    
+exports.generateattributes = function(ctx, ask, attriblist, rng){
+    var ska = {};
+
+    var KBase = generateG1Element(rng);
+    setOpt(ska, "KBase", KBase);
+
+    var r = new ctx.BIG(0);
+    r.rcopy(ctx.ROM_CURVE.CURVE_Order);
+
+    // invA0 := 1/a0
+    var invA0 = new ctx.BIG(0);
+    invA0.copy(ask["a0"]);
+    invA0.invmodp(r);
+
+    var K0 = ctx.PAIR.G1mul(KBase, invA0);
+    setOpt(ska, "K0", K0);
+
+    for(var i=0; i<attriblist.length; i++) {
+        var attrNum = ask["atr"][attriblist[i]]
+        var exp = new ctx.BIG(0);
+        exp.copy(ask["b"]);
+        exp.imul(attrNum);
+        exp.add(ask["a"]);
+        exp.invmodp(r);
+        var Ku = ctx.PAIR.G1mul(KBase, exp);
+        setOpt(ska, "K"+String(attrNum), Ku);
+    }
+
+    return ska;
 };
 
 exports.sign = function(ctx) {
