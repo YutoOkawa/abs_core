@@ -61,7 +61,44 @@ exports.trusteesetup = function(ctx, attributes, rng) {
     return tpk;
 };
 
-exports.authoritysetup = function(ctx, tpk) {
+exports.authoritysetup = function(ctx, tpk, rng) {
+    var keypair = {};
+    var ask = {};
+    var apk = {};
+    var tmax = Object.keys(tpk["atr"]).length;
+
+    var r = new ctx.BIG(0);
+    r.rcopy(ctx.ROM_CURVE.CURVE_Order);
+
+    var a0 = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    var a = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    var b = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    
+    setOpt(ask, "a0", a0);
+    setOpt(ask, "a", a);
+    setOpt(ask, "b", b);
+
+    var A0 = ctx.PAIR.G2mul(tpk["h0"], a0);
+    setOpt(apk, "A0", A0);
+
+    for (var i=1; i<tmax+1; i++) {
+        var A = ctx.PAIR.G2mul(tpk["h"+String(i)], a);
+        setOpt(apk, "A"+String(i), A);
+    }
+
+    for (var i=1; i<tmax+1; i++) {
+        var B = ctx.PAIR.G2mul(tpk["h"+String(i)], b);
+        setOpt(apk, "B"+String(i), B);
+    }
+
+    var c = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    var C = ctx.PAIR.G1mul(tpk["g"], c);
+    setOpt(apk, "C", C);
+
+    setOpt(keypair, "ask", ask);
+    setOpt(keypair, "apk", apk);
+
+    return keypair;
 };
 
 exports.generateattributes = function(ctx){

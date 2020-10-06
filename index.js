@@ -21,7 +21,6 @@ for (i=0;i<100;i++) {
     var hex = buff.toString("hex");
     RAW[i]=parseInt(hex, 16);
 }
-console.log(RAW);
 rng.seed(100,RAW);
 
 var r = new ctx.BIG(0);
@@ -46,3 +45,6 @@ var powGH = ctx.PAIR.GTpow(v, s);
 
 var tpk = abs.trusteesetup(ctx, ["Aqours", "GuiltyKiss", "AZALEA", "CYaRon"], rng);
 // console.log(tpk);
+var keypair = abs.authoritysetup(ctx, tpk, rng);
+// console.log(keypair.ask);
+// console.log(keypair.apk);
