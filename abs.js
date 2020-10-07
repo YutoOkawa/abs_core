@@ -1,4 +1,6 @@
 const CTX = require("amcl-js").CTX;
+const crypto = require("crypto");
+const { stringify } = require("querystring");
 
 var ctx = new CTX("BN254");
 
@@ -15,6 +17,12 @@ function generateG2Element(rng) {
     var seed = ctx.FP2.rand(rng);
     var H = ctx.ECP2.map2point(seed);
     return H;
+}
+
+function createHash(msg) {
+    var hash = crypto.createHash("sha512").update(msg).digest();
+    var hashBIG = ctx.BIG.fromBytes(hash);
+    return hashBIG;
 }
 
 function setOpt(obj, prop, val) {
@@ -133,8 +141,65 @@ exports.generateattributes = function(ctx, ask, attriblist, rng){
     return ska;
 };
 
-exports.sign = function(ctx) {
+exports.sign = function(ctx, tpk, apk, ska, message, policy, rng) {
+    var sign = {};
 
+    // TODO: getMSP関数の実装
+    var msp = [[1],[1],[0],[0]];
+    var attribute_msp = {"Aqours":0,0:"Aqours","AZALEA":1,1:"AZALEA","GuiltyKiss":2,2:"GuiltyKiss","CYaRon":3,3:"CYaRon"};
+
+    var mu = createHash(message+policy);
+
+    var rlist = [];
+    for(var i=0; i<msp.length+1; i++) {
+        var r = new ctx.BIG(0);
+        r.rcopy(ctx.ROM_CURVE.CURVE_Order);
+        var rand = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+        rlist[i] = rand;
+    }
+
+    var Y = ctx.PAIR.G1mul(ska.KBase, rlist[0]);
+    setOpt(sign, "Y", Y);
+
+    var W = ctx.PAIR.G1mul(ska.K0, rlist[0]);
+    setOpt(sign, "W", W);
+
+    for(var i=1; i<msp.length+1; i++) {
+        // multi = (C + g^μ)^r_i
+        var multi = ctx.PAIR.G1mul(tpk["g"], mu);
+        multi.add(apk["C"]);
+        multi = ctx.PAIR.G1mul(multi, rlist[i]);
+
+        // multi = multi + (ska[Ki]^r0)
+        if (ska["K"+String(i)] != undefined) {
+            var K = ctx.PAIR.G1mul(ska["K"+String(i)], rlist[0]);
+            multi.add(K);
+        }
+
+        setOpt(sign, "S"+String(i), multi);
+    }
+
+    for(var j=1; j<msp[0].length+1; j++) {
+        var Pj = new ctx.ECP2();
+        for (var i=1; i<msp.length+1; i++) {
+            // base = Aj + Bj^ui
+            var ui = new ctx.BIG(tpk["atr"][attribute_msp[i-1]]);
+            var base = ctx.PAIR.G2mul(apk["B"+String(j)], ui);
+            base.add(apk["A"+String(j)]);
+
+            // Pj = base ^ Mij*ri
+            var exp = new ctx.BIG(0);
+            exp.copy(rlist[i]);
+            exp.imul(msp[i-1][j-1]);
+            base = ctx.PAIR.G2mul(base, exp);
+
+            // Pj += multi
+            Pj.add(base);
+        }
+        setOpt(sign, "P"+String(j), Pj);
+    }
+
+    return sign;
 };
 
 exports.verify = function(ctx) {

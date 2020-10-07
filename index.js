@@ -62,7 +62,7 @@ var sgh = ctx.PAIR.fexp(sGH);
 var powGH = ctx.PAIR.GTpow(v, s);
 // outputBytes(powGH);
 
-var tpk = abs.trusteesetup(ctx, ["Aqours", "GuiltyKiss", "AZALEA", "CYaRon"], rng);
+var tpk = abs.trusteesetup(ctx, ["Aqours", "AZALEA", "GuiltyKiss", "CYaRon"], rng);
 // console.log(tpk);
 var keypair = abs.authoritysetup(ctx, tpk, rng);
 // console.log(keypair.ask);
@@ -70,3 +70,6 @@ var keypair = abs.authoritysetup(ctx, tpk, rng);
 
 var ska = abs.generateattributes(ctx, keypair["ask"],["Aqours"], rng);
 // console.log(ska);
+
+var sign = abs.sign(ctx, tpk, keypair.apk, ska, "HelloWorld", "Aqours OR AZALEA", rng);
+// console.log(sign);
