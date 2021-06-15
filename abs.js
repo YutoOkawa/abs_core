@@ -8,15 +8,25 @@ var ABS_OK = 0;
 var ABS_FAIL = -1;
 
 function generateG1Element(rng) {
-    var seed = ctx.FP.rand(rng);
-    var G = ctx.ECP.map2point(seed);
-    return G;
+    // var seed = ctx.FP.rand(rng);
+    // var G = ctx.ECP.map2point(seed);
+    // return G;
+    var r = new ctx.BIG(0);
+    r.rcopy(ctx.ROM_CURVE.CURVE_Order);
+    var G = ctx.ECP.generator();
+    var seed = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    return ctx.PAIR.G1mul(G, seed);
 }
 
 function generateG2Element(rng) {
-    var seed = ctx.FP2.rand(rng);
-    var H = ctx.ECP2.map2point(seed);
-    return H;
+    // var seed = ctx.FP2.rand(rng);
+    // var H = ctx.ECP2.map2point(seed);
+    // return H;
+    var r = new ctx.BIG(0);
+    r.rcopy(ctx.ROM_CURVE.CURVE_Order);
+    var H = ctx.ECP2.generator();
+    var seed = ctx.BIG.randtrunc(r, 16*ctx.ECP.AESKEY, rng);
+    return ctx.PAIR.G2mul(H, seed);
 }
 
 function createHash(msg) {

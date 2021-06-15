@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "amcl-js": "file:../../core/javascript"
+    "amcl-js": "file:../../../core/javascript"
   }
 }
